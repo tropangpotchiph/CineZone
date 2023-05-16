@@ -1,5 +1,15 @@
 const global = {
   currentPage: window.location.pathname,
+  search: {
+    term: '',
+    type: '',
+    page: 1,
+    totalPages: 1,
+  },
+  api: {
+    apiKey: 'f3b71fc721b5d685df15fed6fc924cc5',
+    apiUrl: 'https://api.themoviedb.org/3/',
+  },
 };
 
 //Display Popular Movies
@@ -229,6 +239,52 @@ function displayBackgroundImage(type, backgroundPath) {
   }
 }
 
+//Make request to Search
+async function searchAPIData() {
+  const API_KEY = global.api.apiKey;
+  const API_URL = global.api.apiUrl;
+
+  showSpinner();
+
+  const response = await fetch(
+    `${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}`
+  );
+
+  const data = await response.json();
+
+  hideSpinner();
+
+  return data;
+}
+
+//Search Movies / Shows
+async function search() {
+  const queryString = window.location.search;
+  // console.log(queryString);
+  const urlParams = new URLSearchParams(queryString);
+  // console.log(urlParams);
+
+  global.search.type = urlParams.get('type');
+  global.search.term = urlParams.get('search-term');
+
+  if (global.search.term !== '' && global.search.term !== null) {
+    const results = await searchAPIData();
+    console.log(results);
+  } else {
+    showAlert('Please enter search term');
+  }
+}
+
+//Show Alert
+function showAlert(message, className) {
+  const alertEl = document.createElement('div');
+  alertEl.classList.add('alert', className);
+  alertEl.appendChild(document.createTextNode(message));
+  document.querySelector('#alert').appendChild(alertEl);
+
+  setTimeout(() => alertEl.remove(), 3000);
+}
+
 //Display Slider Movies
 async function displaySlider() {
   const { results } = await fetchAPIData('movie/now_playing');
@@ -280,8 +336,8 @@ function initSwiper() {
 
 //Fetch data from TMDB API
 async function fetchAPIData(endpoint) {
-  const API_KEY = 'f3b71fc721b5d685df15fed6fc924cc5';
-  const API_URL = 'https://api.themoviedb.org/3/';
+  const API_KEY = global.api.apiKey;
+  const API_URL = global.api.apiUrl;
 
   showSpinner();
 
@@ -335,7 +391,7 @@ function init() {
       displayShowDetails();
       break;
     case '/search.html':
-      console.log('Search');
+      search();
       break;
   }
 
